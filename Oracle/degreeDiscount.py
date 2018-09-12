@@ -131,12 +131,12 @@ def degreeDiscountIAC3(G, k, Ep):
                 add = 0
                 for n in G.predecessors(v):
                     if n in S:
-                        multi *= (1 - Ep[n][v])
+                        multi *= (1 - Ep[n][v]['weight'])
                 for n in G[v]:
                     if n in S:
-                        add -= Ep[v][n]
+                        add -= Ep[v][n]['weight']
                     else:
-                        add += Ep[v][n]
+                        add += Ep[v][n]['weight']
                 add += 1
                 priority = add * multi
                 dd.add_task(v, -priority)
