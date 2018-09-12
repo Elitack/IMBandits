@@ -1,6 +1,6 @@
 import os
 from Oracle.generalGreedy import generalGreedy
-from Oracle.degreeDiscount import degreeDiscountIC, degreeDiscountIC2, degreeDiscountIAC, degreeDiscountIAC2, degreeDiscountStar
+from Oracle.degreeDiscount import degreeDiscountIC, degreeDiscountIC2, degreeDiscountIAC, degreeDiscountIAC2, degreeDiscountIAC3
 
 save_address = "./SimulationResults"
 
@@ -17,6 +17,6 @@ lambda_ = 0.3
 gamma = 0.1
 dimension = 4
 seed_size = 40
-iterations = 300
+iterations = 150
 
-oracle = degreeDiscountIAC2
+oracle = degreeDiscountIAC3
