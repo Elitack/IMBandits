@@ -3,13 +3,16 @@ from scipy.sparse.csgraph import connected_components
 from scipy.sparse import csr_matrix
 import datetime
 import os.path
-from conf import save_address
+from conf import *
 from sklearn import linear_model
 from random import choice, random, sample
 import networkx as nx
 import numpy as np
 from BanditAlg.BanditAlgorithms_LinUCB import *
 import collections
+from multiprocessing.pool import ThreadPool
+from functools import partial
+
 class CABArmStruct(LinUCBArmStruct):
     def __init__(self, featureDimension,  lambda_, armID):
         LinUCBArmStruct.__init__(self,featureDimension = featureDimension, lambda_= lambda_, armID = armID)
@@ -66,35 +69,40 @@ class CABAlgorithm():
         S = self.oracle(self.G, self.seed_size, self.currentP)
         return S
 
-    def updateGraphClusters(self, feature_vec):
-        for i in range(len(self.armIDSortedList)):
-            id_i = self.armIDSortedList[i]
-            WI = self.arms[id_i].ArmTheta
-            clusterItem=[]
-            CBI = self.arms[id_i].getCBP(self.alpha, feature_vec, self.time)
-            WJTotal=np.zeros(WI.shape)
-            CBJTotal=0.0
-            for j in range(len(self.arms)):
-                id_j = self.armIDSortedList[j]
-                WJ = self.arms[id_j].ArmTheta
-                CBJ = self.arms[id_j].getCBP(self.alpha, feature_vec, self.time)
-                compare= np.dot(WI, feature_vec) - np.dot(WJ, feature_vec)               
-                if (j != i):
-                    if (abs(compare) <= CBI + CBJ):
-                        clusterItem.append(self.arms[id_j])
-                        WJTotal += WJ
-                        CBJTotal += CBJ
-                else:    
+    def update(self, feature_vec, i):
+        id_i = self.armIDSortedList[i]
+        WI = self.arms[id_i].ArmTheta
+        clusterItem=[]
+        CBI = self.arms[id_i].getCBP(self.alpha, feature_vec, self.time)
+        WJTotal=np.zeros(WI.shape)
+        CBJTotal=0.0
+        for j in range(len(self.arms)):
+            id_j = self.armIDSortedList[j]
+            WJ = self.arms[id_j].ArmTheta
+            CBJ = self.arms[id_j].getCBP(self.alpha, feature_vec, self.time)
+            compare= np.dot(WI, feature_vec) - np.dot(WJ, feature_vec)               
+            if (j != i):
+                if (abs(compare) <= CBI + CBJ):
                     clusterItem.append(self.arms[id_j])
-                    WJTotal += WI
-                    CBJTotal += CBI
-            CW= WJTotal/len(clusterItem)
-            CB= CBJTotal/len(clusterItem)
-            x_pta = np.dot(CW, feature_vec) + CB
-            if x_pta > 1:
-                x_pta = 1
-            self.currentP[id_i[0]][id_i[1]]['weight']  = x_pta
-            self.arms[id_i].cluster = clusterItem
+                    WJTotal += WJ
+                    CBJTotal += CBJ
+            else:    
+                clusterItem.append(self.arms[id_j])
+                WJTotal += WI
+                CBJTotal += CBI
+        CW= WJTotal/len(clusterItem)
+        CB= CBJTotal/len(clusterItem)
+        x_pta = np.dot(CW, feature_vec) + CB
+        if x_pta > 1:
+            x_pta = 1
+        self.currentP[id_i[0]][id_i[1]]['weight']  = x_pta
+        self.arms[id_i].cluster = clusterItem
+
+    def updateGraphClusters(self, feature_vec):
+        pool = ThreadPool(processes=cores)
+        func = partial(self.update, feature_vec)
+        pool.map(func, range(len(self.armIDSortedList)))
+        pool.close()   
 
     def updateParameters(self, S, live_nodes, live_edges, feature_vec):
         gamma = self.gamma
