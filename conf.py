@@ -18,6 +18,6 @@ gamma = 0.1
 dimension = 4
 seed_size = 40
 iterations = 100
-cores = 8
+cores = 1
 
 oracle = degreeDiscountIAC3
