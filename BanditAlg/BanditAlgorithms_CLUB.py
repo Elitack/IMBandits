@@ -7,7 +7,7 @@ import math
 from scipy.sparse.csgraph import connected_components
 from scipy.sparse import csr_matrix
 import collections
-from multiprocessing.pool import ThreadPool
+from multiprocessing import Pool
 from functools import partial
 from conf import *
 
@@ -111,22 +111,22 @@ class CLUBAlgorithm:
             self.updateGraphClusters((u, v), 'False')
 
     def update_weight(self, live_edges, feature_vec, node):
-        self.clusters = component_list
+        self.clusters = self.component_list
         for (u, v) in self.G.edges(node):           
             self.SortedArms[(u, v)].updateParametersofClusters(self.clusters, (u,v), self.Graph, self.SortedArms, self.armIDSortedList)
             self.currentP[u][v]['weight']  = self.SortedArms[(u, v)].getProb(self.alpha, feature_vec, self.time)
 
     def updateParameters(self, S, live_nodes, live_edges, feature_vec):
-        pool = ThreadPool(processes=cores)
+        self.N_components, self.component_list = connected_components(csr_matrix(self.Graph))  
+        print("N components:{}".format(self.N_components))        
+        pool = Pool(cores)
         func = partial(self.update_param, live_edges, feature_vec)
         pool.map(func, list(live_nodes))
         pool.close()
-        pool = ThreadPool(processes=cores)
+        pool = Pool(cores)
         func = partial(self.update_weight, live_edges, feature_vec)
         pool.map(func, list(live_nodes))
         pool.close()
-        self.N_components, component_list = connected_components(csr_matrix(self.Graph))  
-        print("N components:{}".format(self.N_components))
         
     def updateGraphClusters(self, armID, binaryRatio):
         n = len(self.SortedArms)

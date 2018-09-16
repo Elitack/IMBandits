@@ -10,7 +10,7 @@ import networkx as nx
 import numpy as np
 from BanditAlg.BanditAlgorithms_LinUCB import *
 import collections
-from multiprocessing.pool import ThreadPool
+from multiprocessing import Pool
 from functools import partial
 
 class CABArmStruct(LinUCBArmStruct):
@@ -99,7 +99,7 @@ class CABAlgorithm():
         self.arms[id_i].cluster = clusterItem
 
     def updateGraphClusters(self, feature_vec):
-        pool = ThreadPool(processes=cores)
+        pool = Pool(cores)
         func = partial(self.update, feature_vec)
         pool.map(func, range(len(self.armIDSortedList)))
         pool.close()   
