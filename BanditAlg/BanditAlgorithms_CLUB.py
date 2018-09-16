@@ -102,6 +102,7 @@ class CLUBAlgorithm:
         return S
 
     def update_param(self, live_edges, feature_vec, node):
+        print(node)
         for (u, v) in self.G.edges(node):
             if (u,v) in live_edges:
                 reward = live_edges[(u,v)]
@@ -111,18 +112,18 @@ class CLUBAlgorithm:
             self.updateGraphClusters((u, v), 'False')
 
     def update_weight(self, live_edges, feature_vec, node):
-        self.clusters = self.component_list
         for (u, v) in self.G.edges(node):           
-            self.SortedArms[(u, v)].updateParametersofClusters(self.clusters, (u,v), self.Graph, self.SortedArms, self.armIDSortedList)
+            self.SortedArms[(u, v)].updateParametersofClusters(self.clusters, (u, v), self.Graph, self.SortedArms, self.armIDSortedList)
             self.currentP[u][v]['weight']  = self.SortedArms[(u, v)].getProb(self.alpha, feature_vec, self.time)
 
-    def updateParameters(self, S, live_nodes, live_edges, feature_vec):
-        self.N_components, self.component_list = connected_components(csr_matrix(self.Graph))  
-        print("N components:{}".format(self.N_components))        
+    def updateParameters(self, S, live_nodes, live_edges, feature_vec):      
         pool = Pool(cores)
         func = partial(self.update_param, live_edges, feature_vec)
         pool.map(func, list(live_nodes))
         pool.close()
+        N_components, component_list = connected_components(csr_matrix(self.Graph))  
+        self.clusters = component_list
+        print("N components:{}".format(N_components))  
         pool = Pool(cores)
         func = partial(self.update_weight, live_edges, feature_vec)
         pool.map(func, list(live_nodes))
