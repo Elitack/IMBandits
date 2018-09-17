@@ -127,7 +127,8 @@ class CABAlgorithm():
                         if(clusterItem[i].getCBP(self.alpha, feature_vec, self.time) < gamma):
                             clusterItem[i].updateParameters(feature_vec, reward)
                             count += 1
-                    print('For gamma updating, Edge:{}, Count:{}, Ratio:{}'.format((u,v), count, count/len(clusterItem)))
+                    if len(clusterItem) != 0:
+                        print('For gamma updating, Edge:{}, Count:{}, Ratio:{}'.format((u,v), count, count/len(clusterItem)))
 
     def getLearntParameters(self, armID):
         return self.arms[armID].ArmTheta
