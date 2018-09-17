@@ -76,6 +76,7 @@ class CABAlgorithm():
         CBI = self.arms[id_i].getCBP(self.alpha, feature_vec, self.time)
         WJTotal=np.zeros(WI.shape)
         CBJTotal=0.0
+        count = 0
         for j in range(len(self.arms)):
             id_j = self.armIDSortedList[j]
             WJ = self.arms[id_j].ArmTheta
@@ -86,10 +87,14 @@ class CABAlgorithm():
                     clusterItem.append(self.arms[id_j])
                     WJTotal += WJ
                     CBJTotal += CBJ
+                    count += 1
             else:    
                 clusterItem.append(self.arms[id_j])
                 WJTotal += WI
                 CBJTotal += CBI
+                count += 1
+        if random() < 0.005:
+            print("For clustering, Node:{}, Count:{}, Ratio:{}".format(i, count, count/len(self.arms)))
         CW= WJTotal/len(clusterItem)
         CB= CBJTotal/len(clusterItem)
         x_pta = np.dot(CW, feature_vec) + CB
@@ -115,10 +120,14 @@ class CABAlgorithm():
                 if (self.arms[(u, v)].getCBP(self.alpha, feature_vec, self.time) >= gamma):
                     self.arms[(u, v)].updateParameters(feature_vec, reward)
                 else:
+                    # print('gamma: {}'.format(self.arms[(u, v)].getCBP(self.alpha, feature_vec, self.time)))
+                    count = 0
                     clusterItem = self.arms[(u, v)].cluster
                     for i in range(len(clusterItem)):
                         if(clusterItem[i].getCBP(self.alpha, feature_vec, self.time) < gamma):
                             clusterItem[i].updateParameters(feature_vec, reward)
+                            count += 1
+                    print('For gamma updating, Edge:{}, Count:{}, Ratio:{}'.format((u,v), count, count/len(clusterItem)))
 
     def getLearntParameters(self, armID):
         return self.arms[armID].ArmTheta
