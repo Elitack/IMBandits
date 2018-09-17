@@ -117,10 +117,18 @@ class CLUBAlgorithm:
             self.currentP[u][v]['weight']  = self.SortedArms[(u, v)].getProb(self.alpha, feature_vec, self.time)
 
     def updateParameters(self, S, live_nodes, live_edges, feature_vec):      
-        pool = Pool(cores)
-        func = partial(self.update_param, live_edges, feature_vec)
-        pool.map(func, list(live_nodes))
-        pool.close()
+        # pool = Pool(cores)
+        #func = partial(self.update_param, live_edges, feature_vec)
+        # pool.map(func, list(live_nodes))
+        # pool.close()
+        for u in live_nodes:
+            for (u, v) in self.G.edges(u):
+                if (u,v) in live_edges:
+                    reward = live_edges[(u,v)]
+                else:
+                    reward = 0
+                self.SortedArms[(u, v)].updateParameters(feature_vec, reward, self.alpha_2)
+                self.updateGraphClusters((u, v), 'False')
         N_components, component_list = connected_components(csr_matrix(self.Graph))  
         self.clusters = component_list
         print("N components:{}".format(N_components))  
