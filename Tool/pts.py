@@ -95,6 +95,7 @@ class PTSAlgorithm:
 		self.CanEstimateV = False
 	def decide(self, pool_articles, userID):
 
+
 		#Sample a Particle
 		d = np.random.choice(self.particle_num, p = [p.weight for p in self.particles])
 		p = self.particles[d]
